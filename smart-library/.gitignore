@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Maven ###
+*.jar
+*.class
+
+### macOS / Windows ###
+.DS_Store
+Thumbs.db
