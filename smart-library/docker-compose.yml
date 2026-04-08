@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres-vector:
+    image: ankane/pgvector:v0.5.1
+    container_name: smart_library_db
+    environment:
+      POSTGRES_USER: lib_admin
+      POSTGRES_PASSWORD: super_secret_password
+      POSTGRES_DB: smart_library_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
