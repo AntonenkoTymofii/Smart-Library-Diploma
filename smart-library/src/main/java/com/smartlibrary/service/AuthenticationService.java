@@ -25,7 +25,7 @@ public class AuthenticationService {
         var user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.ADMIN);
+        user.setRole(Role.READER);
 
         repository.save(user);
 
