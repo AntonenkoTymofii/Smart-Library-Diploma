@@ -17,6 +17,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
 server:
   port: 8080
 
@@ -25,3 +30,5 @@ application:
     jwt:
       secret-key: ${JWT_SECRET}
       expiration: 86400000
+  file-storage:
+    upload-dir: ./uploads/pdf-assets
