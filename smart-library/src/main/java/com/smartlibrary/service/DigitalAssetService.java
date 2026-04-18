@@ -1,5 +1,6 @@
 package com.smartlibrary.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartlibrary.entity.AssetMetadata;
 import com.smartlibrary.entity.DigitalAsset;
 import com.smartlibrary.entity.enums.LicenseType;
@@ -27,6 +28,9 @@ public class DigitalAssetService {
 
     private final DigitalAssetRepository assetRepository;
     private final AssetMetadataRepository metadataRepository;
+    private final PdfParserService pdfParserService;
+    private final AiService aiService;
+    private final ObjectMapper objectMapper;
 
     @Value("${application.file-storage.upload-dir}")
     private String uploadDir;
@@ -68,7 +72,24 @@ public class DigitalAssetService {
             AssetMetadata metadata = new AssetMetadata();
             metadata.setDigitalAsset(savedAsset);
             metadata.setTitle(title);
+
+            // МАГІЯ ШІ ПОЧИНАЄТЬСЯ ТУТ:
+            // Читаємо перші 5 сторінок (цього вистачить для анотації)
+            String extractedText = pdfParserService.extractTextForSummary(targetLocation.toString(), 5);
+
+            // Просимо ШІ написати анотацію
+            var aiData = aiService.extractMetadata(extractedText);
+
+            metadata.setSummary(aiData.getSummary());
+            String jsonAuthor = "[\"" + aiData.getAuthor() + "\"]";
+            metadata.setAuthors(jsonAuthor);
+
+            String jsonMarc21 = objectMapper.writeValueAsString(aiData.getMarc21Data());
+            metadata.setMarc21Data(jsonMarc21);
+
             metadataRepository.save(metadata);
+
+            log.info("✅ Метадані успішно збережено: Автор [{}], MARC21 [{}]", aiData.getAuthor(), aiData.getMarc21Data());
 
             return savedAsset;
 

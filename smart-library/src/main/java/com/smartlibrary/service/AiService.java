@@ -1,0 +1,61 @@
+package com.smartlibrary.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartlibrary.dto.AiMetadataResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AiService {
+
+    private final ChatModel chatModel;
+    private final ObjectMapper objectMapper;
+
+    public AiMetadataResponse extractMetadata(String text) {
+        log.info("Відправляємо текст до локального ШІ для витягування метаданих...");
+
+        String prompt = """
+                Ти професійний бібліотекар та аналітик даних. Проаналізуй текст документа і поверни метадані СУВОРО у форматі JSON.
+                НЕ пиши жодних вступних слів, маркдауну чи пояснень. НЕ копіюй мої інструкції.
+                
+                Використовуй цей шаблон (заповни його реальними даними з тексту):
+                {
+                  "summary": "<Тут напиши 2-3 речення, про що цей документ>",
+                  "author": "<Знайди ПІБ автора біля слів 'Виконав' або 'Студент'. Якщо немає - 'Невідомий автор'>",
+                  "marc21Data": {
+                    "100": "<Тільки ПІБ автора (студента)>",
+                    "245": "<Тільки назва документа або тема роботи>",
+                    "260": "<Назва навчального закладу, факультет та рік (якщо знайдено)>",
+                    "500": "<Тип роботи, наприклад: Практична робота №1>",
+                    "520": "<Твоя анотація з поля summary>",
+                    "650": "<Назва дисципліни або головні ключові слова>",
+                    "700": "<ПІБ викладача, який перевірив роботу (після слова 'Перевірив')>"
+                  }
+                }
+                
+                Текст документа:
+                """ + text;
+
+        try {
+            String response = chatModel.call(prompt);
+
+            String cleanJson = response.replaceAll("```json", "").replaceAll("```", "").trim();
+
+            log.info("Отримано JSON від ШІ: {}", cleanJson);
+
+            return objectMapper.readValue(cleanJson, AiMetadataResponse.class);
+
+        } catch (Exception e) {
+            log.error("Помилка під час спілкування з ШІ або парсингу JSON: {}", e.getMessage());
+            AiMetadataResponse fallback = new AiMetadataResponse();
+            fallback.setSummary("Не вдалося згенерувати анотацію.");
+            fallback.setAuthor("Невідомо");
+            fallback.setMarc21Data(null);
+            return fallback;
+        }
+    }
+}
