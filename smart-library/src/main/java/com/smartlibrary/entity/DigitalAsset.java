@@ -25,14 +25,14 @@ public class DigitalAsset {
     private UUID id;
 
     @Column(name = "file_path", nullable = false)
-    private String filePath; // Де фізично лежить PDF-файл
+    private String filePath;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "license_type", nullable = false)
     private LicenseType licenseType;
 
     @Column(nullable = false)
-    private String status; // Наприклад: "PROCESSING", "PUBLISHED", "ERROR"
+    private String status;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -1,6 +1,8 @@
 package com.smartlibrary.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartlibrary.dto.library.LibraryAssetDto;
+import com.smartlibrary.dto.library.UpdateAssetDto;
 import com.smartlibrary.entity.AssetMetadata;
 import com.smartlibrary.entity.DigitalAsset;
 import com.smartlibrary.entity.enums.LicenseType;
@@ -19,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -73,28 +76,117 @@ public class DigitalAssetService {
             metadata.setDigitalAsset(savedAsset);
             metadata.setTitle(title);
 
-            // МАГІЯ ШІ ПОЧИНАЄТЬСЯ ТУТ:
-            // Читаємо перші 5 сторінок (цього вистачить для анотації)
             String extractedText = pdfParserService.extractTextForSummary(targetLocation.toString(), 5);
 
-            // Просимо ШІ написати анотацію
             var aiData = aiService.extractMetadata(extractedText);
 
             metadata.setSummary(aiData.getSummary());
-            String jsonAuthor = "[\"" + aiData.getAuthor() + "\"]";
-            metadata.setAuthors(jsonAuthor);
+            try {
+                List<String> authorsList = List.of(aiData.getAuthor());
+                String jsonAuthor = objectMapper.writeValueAsString(authorsList);
+                metadata.setAuthors(jsonAuthor);
 
-            String jsonMarc21 = objectMapper.writeValueAsString(aiData.getMarc21Data());
-            metadata.setMarc21Data(jsonMarc21);
+                String jsonMarc21 = objectMapper.writeValueAsString(aiData.getMarc21Data());
+                metadata.setMarc21Data(jsonMarc21);
 
+            } catch (Exception e) {
+                log.error("Помилка серіалізації метаданих у JSON: {}", e.getMessage());
+                metadata.setAuthors("[\"Невідомий автор\"]");
+                metadata.setMarc21Data("{}");
+            }
             metadataRepository.save(metadata);
 
-            log.info("✅ Метадані успішно збережено: Автор [{}], MARC21 [{}]", aiData.getAuthor(), aiData.getMarc21Data());
+            log.info("Метадані успішно збережено для файлу: {}", targetLocation);
 
             return savedAsset;
 
         } catch (IOException ex) {
             throw new RuntimeException("Помилка збереження файлу " + originalFileName, ex);
         }
+    }
+
+    public List<LibraryAssetDto> getAllAssets() {
+        List<AssetMetadata> allMetadata = metadataRepository.findAllWithDigitalAsset();
+
+        return allMetadata.stream().map(this::convertToDto).toList();
+    }
+
+    public LibraryAssetDto getAssetById(UUID assetId) {
+        AssetMetadata metadata = metadataRepository.findAll().stream()
+                .filter(m -> m.getDigitalAsset().getId().equals(assetId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Книгу з ID " + assetId + " не знайдено"));
+
+        return convertToDto(metadata);
+    }
+
+    @Transactional
+    public LibraryAssetDto updateAsset(UUID assetId, UpdateAssetDto updateDto) {
+        AssetMetadata metadata = metadataRepository.findAll().stream()
+                .filter(m -> m.getDigitalAsset().getId().equals(assetId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Книгу з ID " + assetId + " не знайдено"));
+
+        if (updateDto.getTitle() != null) metadata.setTitle(updateDto.getTitle());
+        if (updateDto.getAuthors() != null) metadata.setAuthors(updateDto.getAuthors());
+        if (updateDto.getSummary() != null) metadata.setSummary(updateDto.getSummary());
+
+        if (updateDto.getMarc21Data() != null) {
+            try {
+                String jsonMarc21 = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(updateDto.getMarc21Data());
+                metadata.setMarc21Data(jsonMarc21);
+            } catch (Exception e) {
+                log.error("Помилка конвертації MARC21 при оновленні: {}", e.getMessage());
+            }
+        }
+
+        metadataRepository.save(metadata);
+        return convertToDto(metadata);
+    }
+
+    @Transactional
+    public void deleteAsset(UUID assetId) {
+        DigitalAsset asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new RuntimeException("Книгу з ID " + assetId + " не знайдено"));
+
+        try {
+            Path filePath = Path.of(asset.getFilePath());
+            Files.deleteIfExists(filePath);
+            log.info("Файл успішно видалено з диска: {}", filePath);
+        } catch (Exception e) {
+            log.error("Не вдалося видалити файл з диска: {}", e.getMessage());
+        }
+
+        assetRepository.delete(asset);
+        log.info("Книгу {} повністю видалено з бази даних", assetId);
+    }
+
+    private LibraryAssetDto convertToDto(AssetMetadata metadata) {
+        Object parsedMarc21 = null;
+        List<String> parsedAuthors = null;
+        try {
+            if (metadata.getMarc21Data() != null) {
+                parsedMarc21 = objectMapper.readValue(metadata.getMarc21Data(), Object.class);
+            }
+            if (metadata.getAuthors() != null) {
+                parsedAuthors = objectMapper.readValue(metadata.getAuthors(), List.class);
+            }
+        } catch (Exception e) {
+            log.error("Помилка парсингу MARC21 для книги {}: {}", metadata.getDigitalAsset().getId(), e.getMessage());
+            if (parsedAuthors == null && metadata.getAuthors() != null) {
+                parsedAuthors = List.of(metadata.getAuthors());
+            }
+        }
+
+        return LibraryAssetDto.builder()
+                .id(metadata.getDigitalAsset().getId())
+                .title(metadata.getTitle() != null ? metadata.getTitle() : "Без назви")
+                .authors(parsedAuthors)
+                .summary(metadata.getSummary())
+                .marc21Data(parsedMarc21)
+                .filePath(metadata.getDigitalAsset().getFilePath())
+                .createdAt(metadata.getDigitalAsset().getCreatedAt())
+                .build();
     }
 }

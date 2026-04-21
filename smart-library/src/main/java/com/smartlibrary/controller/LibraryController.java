@@ -1,17 +1,19 @@
 package com.smartlibrary.controller;
 
 import com.smartlibrary.dto.library.AssetResponse;
+import com.smartlibrary.dto.library.LibraryAssetDto;
+import com.smartlibrary.dto.library.UpdateAssetDto;
 import com.smartlibrary.entity.DigitalAsset;
 import com.smartlibrary.entity.enums.LicenseType;
 import com.smartlibrary.service.DigitalAssetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/library")
@@ -40,5 +42,32 @@ public class LibraryController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/assets")
+    public ResponseEntity<List<LibraryAssetDto>> getAllAssets() {
+        List<LibraryAssetDto> assets = digitalAssetService.getAllAssets();
+        return ResponseEntity.ok(assets);
+    }
+
+    @GetMapping("/assets/{id}")
+    public ResponseEntity<LibraryAssetDto> getAssetById(@PathVariable UUID id) {
+        LibraryAssetDto asset = digitalAssetService.getAssetById(id);
+        return ResponseEntity.ok(asset);
+    }
+
+    @PutMapping("/assets/{id}")
+    public ResponseEntity<LibraryAssetDto> updateAsset(
+            @PathVariable UUID id,
+            @RequestBody UpdateAssetDto updateDto) {
+
+        LibraryAssetDto updatedAsset = digitalAssetService.updateAsset(id, updateDto);
+        return ResponseEntity.ok(updatedAsset);
+    }
+
+    @DeleteMapping("/assets/{id}")
+    public ResponseEntity<Void> deleteAsset(@PathVariable UUID id) {
+        digitalAssetService.deleteAsset(id);
+        return ResponseEntity.noContent().build();
     }
 }

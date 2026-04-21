@@ -20,7 +20,7 @@ import java.util.UUID;
 public class AssetMetadata {
 
     @Id
-    private UUID assetId; // ID збігається з ID документа (відношення 1-до-1)
+    private UUID assetId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
@@ -30,7 +30,6 @@ public class AssetMetadata {
     @Column(nullable = false)
     private String title;
 
-    // Використовуємо сучасну нативну підтримку JSON від Hibernate 6
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private String authors;
@@ -41,4 +40,5 @@ public class AssetMetadata {
 
     @Column(columnDefinition = "TEXT")
     private String summary;
+
 }
