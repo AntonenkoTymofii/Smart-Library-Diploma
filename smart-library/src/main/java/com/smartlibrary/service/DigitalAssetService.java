@@ -1,6 +1,7 @@
 package com.smartlibrary.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pgvector.PGvector;
 import com.smartlibrary.dto.library.LibraryAssetDto;
 import com.smartlibrary.dto.library.UpdateAssetDto;
 import com.smartlibrary.entity.AssetMetadata;
@@ -79,6 +80,19 @@ public class DigitalAssetService {
             String extractedText = pdfParserService.extractTextForSummary(targetLocation.toString(), 5);
 
             var aiData = aiService.extractMetadata(extractedText);
+
+            List<Double> textVector = aiService.generateEmbedding(extractedText);
+            if (textVector != null && textVector.size() == 768) {
+                float[] vectorArray = new float[768];
+                for (int i = 0; i < 768; i++) {
+                    vectorArray[i] = textVector.get(i).floatValue();
+                }
+
+                metadata.setEmbedding(vectorArray);
+                log.info("Вектор успішно підготовлено до збереження в БД!");
+            } else {
+                log.warn("Не вдалося згенерувати валідний вектор для файлу");
+            }
 
             metadata.setSummary(aiData.getSummary());
             try {
@@ -188,5 +202,24 @@ public class DigitalAssetService {
                 .filePath(metadata.getDigitalAsset().getFilePath())
                 .createdAt(metadata.getDigitalAsset().getCreatedAt())
                 .build();
+    }
+
+    public List<LibraryAssetDto> searchBooks(String query) {
+        log.info("Шукаємо книги за запитом: '{}'", query);
+
+        // 1. Перетворюємо текст на вектор
+        List<Double> queryEmbeddingList = aiService.generateEmbedding(query);
+        if (queryEmbeddingList == null || queryEmbeddingList.size() != 768) {
+            throw new RuntimeException("Не вдалося згенерувати вектор для пошукового запиту");
+        }
+
+        // РЯТІВНИЙ РЯДОК: Перетворюємо список [0.1, 0.2...] у звичайний текст (String)
+        String vectorString = queryEmbeddingList.toString();
+
+        // 2. Шукаємо в базі (передаємо рядок)
+        List<AssetMetadata> searchResults = metadataRepository.searchSimilarDocuments(vectorString);
+
+        // 3. Повертаємо DTO
+        return searchResults.stream().map(this::convertToDto).toList();
     }
 }

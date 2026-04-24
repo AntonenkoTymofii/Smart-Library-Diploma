@@ -5,7 +5,10 @@ import com.smartlibrary.dto.AiMetadataResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -14,10 +17,12 @@ public class AiService {
 
     private final ChatModel chatModel;
     private final ObjectMapper objectMapper;
+    private final EmbeddingModel embeddingModel;
 
     public AiMetadataResponse extractMetadata(String text) {
         log.info("Відправляємо текст до локального ШІ для витягування метаданих...");
 
+        String safeText = text.length() > 3500 ? text.substring(0, 3500) : text;
         String prompt = """
                 Ти професійний бібліотекар та аналітик даних. Проаналізуй текст документа і поверни метадані СУВОРО у форматі JSON.
                 НЕ пиши жодних вступних слів, маркдауну чи пояснень. НЕ копіюй мої інструкції.
@@ -38,7 +43,7 @@ public class AiService {
                 }
                 
                 Текст документа:
-                """ + text;
+                """ + safeText;
 
         try {
             String response = chatModel.call(prompt);
@@ -56,6 +61,22 @@ public class AiService {
             fallback.setAuthor("Невідомо");
             fallback.setMarc21Data(null);
             return fallback;
+        }
+    }
+
+    public List<Double> generateEmbedding(String text) {
+        log.info("Генеруємо векторний ембеддінг для тексту...");
+
+        int maxLength = Math.min(text.length(), 1500);
+        String safeText = text.substring(0, maxLength);
+
+        try {
+            List<Double> embedding = embeddingModel.embed(safeText);
+            log.info("Ембеддінг успішно згенеровано! Розмірність вектора: {}", embedding.size());
+            return embedding;
+        } catch (Exception e) {
+            log.error("Помилка генерації ембеддінгу: {}", e.getMessage());
+            return null;
         }
     }
 }

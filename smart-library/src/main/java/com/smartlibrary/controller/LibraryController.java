@@ -70,4 +70,10 @@ public class LibraryController {
         digitalAssetService.deleteAsset(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/assets/search")
+    public ResponseEntity<List<LibraryAssetDto>> searchAssets(@RequestParam("q") String query) {
+        List<LibraryAssetDto> results = digitalAssetService.searchBooks(query);
+        return ResponseEntity.ok(results);
+    }
 }

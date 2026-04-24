@@ -29,6 +29,9 @@ spring:
         options:
           model: qwen2.5
           temperature: 0.1
+      embedding:
+        options:
+          model: nomic-embed-text
 
 server:
   port: 8080

@@ -41,4 +41,8 @@ public class AssetMetadata {
     @Column(columnDefinition = "TEXT")
     private String summary;
 
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Column(columnDefinition = "vector(768)")
+    private float[] embedding;
+
 }
