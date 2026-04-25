@@ -13,11 +13,14 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -207,19 +210,33 @@ public class DigitalAssetService {
     public List<LibraryAssetDto> searchBooks(String query) {
         log.info("Шукаємо книги за запитом: '{}'", query);
 
-        // 1. Перетворюємо текст на вектор
         List<Double> queryEmbeddingList = aiService.generateEmbedding(query);
         if (queryEmbeddingList == null || queryEmbeddingList.size() != 768) {
             throw new RuntimeException("Не вдалося згенерувати вектор для пошукового запиту");
         }
 
-        // РЯТІВНИЙ РЯДОК: Перетворюємо список [0.1, 0.2...] у звичайний текст (String)
         String vectorString = queryEmbeddingList.toString();
 
-        // 2. Шукаємо в базі (передаємо рядок)
         List<AssetMetadata> searchResults = metadataRepository.searchSimilarDocuments(vectorString);
 
-        // 3. Повертаємо DTO
         return searchResults.stream().map(this::convertToDto).toList();
+    }
+
+    public Resource loadFileAsResource(UUID assetId) {
+        AssetMetadata metadata = metadataRepository.findById(assetId)
+                .orElseThrow(() -> new RuntimeException("Файл не знайдено з ID: " + assetId));
+
+        try {
+            Path filePath = Paths.get(metadata.getDigitalAsset().getFilePath()).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("Файл не знайдено або неможливо прочитати: " + filePath);
+            }
+        } catch (MalformedURLException ex) {
+            throw new RuntimeException("Помилка при формуванні шляху до файлу", ex);
+        }
     }
 }

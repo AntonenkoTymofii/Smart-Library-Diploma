@@ -13,11 +13,6 @@ import java.io.IOException;
 @Slf4j
 public class PdfParserService {
 
-    /**
-     * Витягує текст із PDF-файлу.
-     * Щоб не перевантажувати ШІ (і не платити за мільйони токенів),
-     * для генерації анотації ми можемо читати лише перші сторінки.
-     */
     public String extractTextForSummary(String filePath, int maxPages) {
         log.info("Починаємо читання тексту з файлу: {}", filePath);
 
@@ -29,10 +24,8 @@ public class PdfParserService {
         try (PDDocument document = Loader.loadPDF(file)) {
             PDFTextStripper stripper = new PDFTextStripper();
 
-            // Читаємо з 1-ї сторінки
             stripper.setStartPage(1);
 
-            // Якщо в книзі менше сторінок, ніж наш ліміт, беремо скільки є
             stripper.setEndPage(Math.min(document.getNumberOfPages(), maxPages));
 
             String text = stripper.getText(document);
