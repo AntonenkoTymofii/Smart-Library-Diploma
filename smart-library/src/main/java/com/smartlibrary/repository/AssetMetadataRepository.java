@@ -1,6 +1,8 @@
 package com.smartlibrary.repository;
 
 import com.smartlibrary.entity.AssetMetadata;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,4 +20,6 @@ public interface AssetMetadataRepository extends JpaRepository<AssetMetadata, UU
             "ORDER BY embedding <-> cast(:queryVectorString as vector) " +
             "LIMIT 5", nativeQuery = true)
     List<AssetMetadata> searchSimilarDocuments(@Param("queryVectorString") String queryVectorString);
+
+    Page<AssetMetadata> findByTitleContainingIgnoreCaseOrAuthorsContainingIgnoreCase(String title, String author, Pageable pageable);
 }

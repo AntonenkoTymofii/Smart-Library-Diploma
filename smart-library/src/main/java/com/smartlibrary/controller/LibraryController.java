@@ -8,6 +8,7 @@ import com.smartlibrary.entity.enums.LicenseType;
 import com.smartlibrary.service.DigitalAssetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -44,9 +45,13 @@ public class LibraryController {
     }
 
     @GetMapping("/assets")
-    public ResponseEntity<List<LibraryAssetDto>> getAllAssets() {
-        List<LibraryAssetDto> assets = digitalAssetService.getAllAssets();
-        return ResponseEntity.ok(assets);
+    public ResponseEntity<Page<LibraryAssetDto>> getAllAssets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String filter) {
+
+        Page<LibraryAssetDto> resultPage = digitalAssetService.getAllAssets(page, size, filter);
+        return ResponseEntity.ok(resultPage);
     }
 
     @GetMapping("/assets/{id}")

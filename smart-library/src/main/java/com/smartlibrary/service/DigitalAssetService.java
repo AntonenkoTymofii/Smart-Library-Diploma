@@ -15,6 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -122,10 +126,20 @@ public class DigitalAssetService {
         }
     }
 
-    public List<LibraryAssetDto> getAllAssets() {
-        List<AssetMetadata> allMetadata = metadataRepository.findAllWithDigitalAsset();
+    public Page<LibraryAssetDto> getAllAssets(int page, int size, String filter) {
+        log.info("Отримання списку книг: сторінка {}, розмір {}, фільтр '{}'", page, size, filter);
 
-        return allMetadata.stream().map(this::convertToDto).toList();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("digitalAsset.createdAt").descending());
+
+        Page<AssetMetadata> assetPage;
+
+        if (filter != null && !filter.trim().isEmpty()) {
+            assetPage = metadataRepository.findByTitleContainingIgnoreCaseOrAuthorsContainingIgnoreCase(filter, filter, pageable);
+        } else {
+            assetPage = metadataRepository.findAll(pageable);
+        }
+
+        return assetPage.map(this::convertToDto);
     }
 
     public LibraryAssetDto getAssetById(UUID assetId) {
