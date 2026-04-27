@@ -21,5 +21,5 @@ public interface AssetMetadataRepository extends JpaRepository<AssetMetadata, UU
             "LIMIT 5", nativeQuery = true)
     List<AssetMetadata> searchSimilarDocuments(@Param("queryVectorString") String queryVectorString);
 
-    Page<AssetMetadata> findByTitleContainingIgnoreCaseOrAuthorsContainingIgnoreCase(String title, String author, Pageable pageable);
-}
+    @Query("SELECT a FROM AssetMetadata a WHERE LOWER(a.title) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(CAST(a.authors AS string)) LIKE LOWER(CONCAT('%', :filter, '%'))")
+    Page<AssetMetadata> searchByKeyword(@Param("filter") String filter, Pageable pageable);}

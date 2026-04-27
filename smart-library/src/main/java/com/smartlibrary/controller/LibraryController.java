@@ -9,12 +9,14 @@ import com.smartlibrary.service.DigitalAssetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,12 +86,15 @@ public class LibraryController {
     @GetMapping("/assets/{id}/download")
     public ResponseEntity<Resource> downloadAsset(@PathVariable UUID id) {
         Resource resource = digitalAssetService.loadFileAsResource(id);
-
         String fileName = resource.getFilename();
+
+        ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
+                .filename(fileName, StandardCharsets.UTF_8)
+                .build();
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
                 .body(resource);
     }
 }

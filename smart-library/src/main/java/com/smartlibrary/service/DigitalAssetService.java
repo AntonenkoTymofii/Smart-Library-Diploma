@@ -134,7 +134,7 @@ public class DigitalAssetService {
         Page<AssetMetadata> assetPage;
 
         if (filter != null && !filter.trim().isEmpty()) {
-            assetPage = metadataRepository.findByTitleContainingIgnoreCaseOrAuthorsContainingIgnoreCase(filter, filter, pageable);
+            assetPage = metadataRepository.searchByKeyword(filter.trim(), pageable);
         } else {
             assetPage = metadataRepository.findAll(pageable);
         }
