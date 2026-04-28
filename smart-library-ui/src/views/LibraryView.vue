@@ -144,7 +144,9 @@ const downloadPdf = async (assetId, title) => {
     <div v-else class="book-grid">
       <div v-for="book in books" :key="book.id" class="book-card">
         <div class="card-header">
-          <h2 class="book-title">{{ book.title }}</h2>
+          <router-link :to="'/asset/' + book.id" class="title-link">
+            <h2 class="book-title">{{ book.title }}</h2>
+          </router-link>
         </div>
         <div class="card-body">
           <p class="author">👨‍💻 <strong>Автор:</strong> {{ book.authors.join(', ') }}</p>
@@ -195,4 +197,12 @@ const downloadPdf = async (assetId, title) => {
 .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding: 1rem; background: white; border-radius: 8px; }
 .btn-pagination { background-color: #fff; border: 1px solid #ddd; }
 .btn-pagination:disabled { opacity: 0.5; cursor: not-allowed; }
+.title-link {
+  text-decoration: none;
+  color: inherit;
+}
+.title-link:hover .book-title {
+  color: #2a5298;
+  text-decoration: underline;
+}
 </style>

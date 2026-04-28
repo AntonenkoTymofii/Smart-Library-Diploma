@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import LibraryView from '../views/LibraryView.vue'
-// import AssetDetailView from '../views/AssetDetailView.vue' // Для майбутньої сторінки книги
+import AssetDetailView from '../views/AssetDetailView.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -17,6 +17,12 @@ const router = createRouter({
             name: 'library',
             component: LibraryView,
             meta: { requiresAuth: false }
+        },
+        {
+            path: '/asset/:id',
+            name: 'asset-detail',
+            component: AssetDetailView,
+            props: true
         }
     ]
 })
