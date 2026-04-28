@@ -72,7 +72,6 @@ public class DigitalAssetService {
         try {
             Path targetLocation = this.fileStorageLocation.resolve(uniqueFileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-            log.info("Файл успішно збережено за шляхом: {}", targetLocation);
 
             DigitalAsset asset = new DigitalAsset();
             asset.setFilePath(targetLocation.toString());
@@ -86,50 +85,59 @@ public class DigitalAssetService {
 
             String extractedText = pdfParserService.extractTextForSummary(targetLocation.toString(), 5);
 
-            var aiData = aiService.extractMetadata(extractedText);
+            String textForAi = extractedText.length() > 1500 ? extractedText.substring(0, 1500) : extractedText;
 
-            List<Double> textVector = aiService.generateEmbedding(extractedText);
+            var aiData = aiService.extractMetadata(textForAi);
+
+            List<Double> textVector = aiService.generateEmbedding(textForAi);
+
+            float[] vectorArray = new float[768];
+
             if (textVector != null && textVector.size() == 768) {
-                float[] vectorArray = new float[768];
                 for (int i = 0; i < 768; i++) {
                     vectorArray[i] = textVector.get(i).floatValue();
                 }
-
-                metadata.setEmbedding(vectorArray);
                 log.info("Вектор успішно підготовлено до збереження в БД!");
             } else {
-                log.warn("Не вдалося згенерувати валідний вектор для файлу");
+                log.warn("Не вдалося згенерувати валідний вектор для файлу. Використано порожній вектор.");
             }
 
+            metadata.setEmbedding(vectorArray);
+
             metadata.setSummary(aiData.getSummary());
+
+            metadata.setPublicationYear(aiData.getYear());
+
             try {
                 List<String> authorsList = List.of(aiData.getAuthor());
-                String jsonAuthor = objectMapper.writeValueAsString(authorsList);
-                metadata.setAuthors(jsonAuthor);
-
-                String jsonMarc21 = objectMapper.writeValueAsString(aiData.getMarc21Data());
-                metadata.setMarc21Data(jsonMarc21);
-
+                metadata.setAuthors(objectMapper.writeValueAsString(authorsList));
+                metadata.setMarc21Data(objectMapper.writeValueAsString(aiData.getMarc21Data()));
             } catch (Exception e) {
-                log.error("Помилка серіалізації метаданих у JSON: {}", e.getMessage());
+                log.error("Помилка серіалізації: {}", e.getMessage());
                 metadata.setAuthors("[\"Невідомий автор\"]");
                 metadata.setMarc21Data("{}");
             }
+
             metadataRepository.save(metadata);
 
-            log.info("Метадані успішно збережено для файлу: {}", targetLocation);
+            // Оновлюємо статус на завершений
+            savedAsset.setStatus("COMPLETED");
+            assetRepository.save(savedAsset);
 
             return savedAsset;
 
         } catch (IOException ex) {
-            throw new RuntimeException("Помилка збереження файлу " + originalFileName, ex);
+            throw new RuntimeException("Помилка збереження файлу", ex);
         }
     }
 
     public Page<LibraryAssetDto> getAllAssets(int page, int size, String filter) {
-        log.info("Отримання списку книг: сторінка {}, розмір {}, фільтр '{}'", page, size, filter);
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, size);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("digitalAsset.createdAt").descending());
+        log.info("Отримання списку книг: сторінка {}, розмір {}, фільтр '{}'", safePage, safeSize, filter);
+
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by("digitalAsset.createdAt").descending());
 
         Page<AssetMetadata> assetPage;
 
@@ -214,6 +222,7 @@ public class DigitalAssetService {
                 .id(metadata.getDigitalAsset().getId())
                 .title(metadata.getTitle() != null ? metadata.getTitle() : "Без назви")
                 .authors(parsedAuthors)
+                .publicationYear(metadata.getPublicationYear())
                 .summary(metadata.getSummary())
                 .marc21Data(parsedMarc21)
                 .filePath(metadata.getDigitalAsset().getFilePath())

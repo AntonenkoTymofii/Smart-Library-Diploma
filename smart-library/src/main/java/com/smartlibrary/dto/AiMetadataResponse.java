@@ -8,5 +8,6 @@ import java.util.Map;
 public class AiMetadataResponse {
     private String summary;
     private String author;
+    private Integer year;
     private Map<String, String> marc21Data;
 }

@@ -13,6 +13,7 @@ public class LibraryAssetDto {
     private UUID id;
     private String title;
     private List<String> authors;
+    private Integer publicationYear;
     private String summary;
     private Object marc21Data;
     private String filePath;

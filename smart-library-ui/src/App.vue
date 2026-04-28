@@ -14,6 +14,57 @@ const searchQuery = ref('')
 const isFirstPage = ref(true)
 const isLastPage = ref(true)
 
+const selectedFile = ref(null)
+const uploading = ref(false)
+const uploadSuccess = ref(false)
+const fileInput = ref(null)
+
+const handleFileChange = (event) => {
+  selectedFile.value = event.target.files[0]
+  uploadSuccess.value = false
+}
+
+const uploadFile = async () => {
+  if (!selectedFile.value) return
+
+  uploading.value = true
+  const formData = new FormData()
+
+  // 1. Передаємо сам файл
+  formData.append('file', selectedFile.value)
+
+  // 2. Передаємо назву (беремо назву файлу і відрізаємо ".pdf")
+  const fileNameWithoutExt = selectedFile.value.name.replace(/\.[^/.]+$/, "")
+  formData.append('title', fileNameWithoutExt)
+
+  // 3. Передаємо тип ліцензії (тут напиши ту, яка є в твоєму Enum, наприклад 'OPEN_ACCESS' або 'PUBLIC_DOMAIN')
+  formData.append('licenseType', 'OPEN_ACCESS')
+
+  try {
+    // ВАЖЛИВО: Виправили URL на правильний
+    const response = await fetch('http://localhost:8080/api/v1/library/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      // Тепер, якщо буде помилка, ми побачимо її статус!
+      throw new Error(`Помилка сервера: ${response.status}`)
+    }
+
+    uploadSuccess.value = true
+    selectedFile.value = null
+    if (fileInput.value) fileInput.value.value = ''
+
+    await fetchBooks()
+
+  } catch (err) {
+    alert('Помилка при завантаженні: ' + err.message)
+  } finally {
+    uploading.value = false
+  }
+}
+
 // Головна функція завантаження
 const fetchBooks = async () => {
   loading.value = true
@@ -61,14 +112,14 @@ const nextPage = () => {
 }
 
 const prevPage = () => {
-  if (!isFirstPage.value) {
+  if (currentPage.value > 0) {
     currentPage.value--
     fetchBooks()
   }
 }
 
 const searchBooks = () => {
-  currentPage.value = 0 // При новому пошуку завжди повертаємось на 1 сторінку
+  currentPage.value = 0
   fetchBooks()
 }
 
@@ -128,6 +179,26 @@ const downloadPdf = async (assetId, title) => {
         <button @click="searchBooks" class="btn btn-primary">Знайти</button>
       </div>
 
+      <div class="upload-section">
+        <div class="card-upload">
+          <h3>📤 Завантажити нову працю</h3>
+          <div class="upload-controls">
+            <input type="file" @change="handleFileChange" accept=".pdf" ref="fileInput" class="file-input-hidden" id="file-upload"/>
+            <label for="file-upload" class="btn btn-outline">
+              {{ selectedFile ? selectedFile.name : 'Обрати PDF файл' }}
+            </label>
+            <button
+                @click="uploadFile"
+                :disabled="!selectedFile || uploading"
+                class="btn btn-primary"
+            >
+              {{ uploading ? '⏳ Завантаження...' : 'Завантажити в бібліотеку' }}
+            </button>
+          </div>
+          <p v-if="uploadSuccess" style="color: green; margin-top: 10px;">✨ Файл успішно оброблено ШІ та додано!</p>
+        </div>
+      </div>
+
       <div v-if="loading" class="alert alert-info">⏳ Шукаємо документи в базі...</div>
       <div v-else-if="error" class="alert alert-error">❌ Помилка: {{ error }}</div>
       <div v-else-if="books.length === 0" class="alert alert-warning">📭 За вашим запитом нічого не знайдено.</div>
@@ -145,12 +216,18 @@ const downloadPdf = async (assetId, title) => {
           </div>
 
           <div class="card-footer">
-            <span class="id-hint">ID: {{ book.id.substring(0, 8) }}...</span>
+            <div class="meta-info">
+              <span v-if="book.publicationYear" class="year-badge">
+                📅 {{ book.publicationYear }} рік
+              </span>
+              <span v-else class="year-badge unknown">
+                📅 Рік не вказано
+              </span>
+            </div>
             <button
                 @click="downloadPdf(book.id, book.title)"
-                class="btn btn-outline"
-            >
-              📥 Завантажити PDF
+                class="btn btn-download">
+              📥 Скачати PDF
             </button>
           </div>
         </div>
@@ -159,7 +236,7 @@ const downloadPdf = async (assetId, title) => {
       <div v-if="totalPages > 1" class="pagination">
         <button
             @click="prevPage"
-            :disabled="isFirstPage"
+            :disabled="currentPage === 0"
             class="btn btn-pagination"
         >
           ⬅ Попередня
@@ -213,6 +290,27 @@ const downloadPdf = async (assetId, title) => {
   display: flex;
   gap: 10px;
   margin-bottom: 2rem;
+}
+
+.upload-section {
+  margin-bottom: 2rem;
+}
+.card-upload {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px dashed #2a5298;
+  text-align: center;
+}
+.upload-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 1rem;
+}
+.file-input-hidden {
+  display: none;
 }
 
 .search-input {
@@ -329,17 +427,42 @@ const downloadPdf = async (assetId, title) => {
 
 .card-footer {
   padding: 1rem 1.5rem;
-  background-color: #fcfcfc;
-  border-top: 1px solid #f0f0f0;
+  background-color: #f8f9fa;
+  border-top: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.id-hint {
-  font-size: 0.8rem;
-  color: #aaa;
-  font-family: monospace;
+.year-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.year-badge.unknown {
+  background-color: #f5f5f5;
+  color: #9e9e9e;
+}
+
+.btn-download {
+  background-color: #2a5298;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-download:hover {
+  background-color: #1e3c72;
 }
 
 /* Пагінація */

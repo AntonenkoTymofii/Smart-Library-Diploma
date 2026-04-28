@@ -35,6 +35,10 @@ public class SecurityConfiguration {
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/library/assets/**").permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/api/v1/library/upload").permitAll()
+
+                        .requestMatchers("/error").permitAll()
+
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
                         .anyRequest().authenticated()

@@ -34,6 +34,9 @@ public class AssetMetadata {
     @Column(columnDefinition = "jsonb")
     private String authors;
 
+    @Column(name = "publication_year")
+    private Integer publicationYear;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "marc21_data", columnDefinition = "jsonb")
     private String marc21Data;
