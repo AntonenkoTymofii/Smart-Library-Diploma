@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import LibraryView from '../views/LibraryView.vue'
 import AssetDetailView from '../views/AssetDetailView.vue'
+import UploadView from '../views/UploadView.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -23,6 +24,12 @@ const router = createRouter({
             name: 'asset-detail',
             component: AssetDetailView,
             props: true
+        },
+        {
+            path: '/upload',
+            name: 'upload',
+            component: UploadView,
+            meta: { requiresAuth: true }
         }
     ]
 })

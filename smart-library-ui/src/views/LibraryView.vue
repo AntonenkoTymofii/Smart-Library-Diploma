@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { jwtDecode } from 'jwt-decode'
+import { useRouter } from 'vue-router'
 
 const books = ref([])
 const loading = ref(false)
@@ -14,6 +15,7 @@ const selectedFile = ref(null)
 const uploading = ref(false)
 const uploadSuccess = ref(false)
 const fileInput = ref(null)
+const router = useRouter()
 
 const userRole = ref('GUEST')
 const token = localStorage.getItem('jwt')
@@ -121,22 +123,10 @@ const downloadPdf = async (assetId, title) => {
     <div class="search-bar">
       <input v-model="searchQuery" @keyup.enter="searchBooks" type="text" placeholder="Пошук..." class="search-input"/>
       <button @click="searchBooks" class="btn btn-primary">Знайти</button>
-    </div>
 
-    <div v-if="canUpload" class="upload-section">
-      <div class="card-upload">
-        <h3>📤 Завантажити нову працю (Доступно для: {{ userRole }})</h3>
-        <div class="upload-controls">
-          <input type="file" @change="handleFileChange" accept=".pdf" ref="fileInput" class="file-input-hidden" id="file-upload"/>
-          <label for="file-upload" class="btn btn-outline">
-            {{ selectedFile ? selectedFile.name : 'Обрати PDF файл' }}
-          </label>
-          <button @click="uploadFile" :disabled="!selectedFile || uploading" class="btn btn-primary">
-            {{ uploading ? '⏳ Завантаження...' : 'Завантажити' }}
-          </button>
-        </div>
-        <p v-if="uploadSuccess" style="color: green;">✨ Успішно додано!</p>
-      </div>
+      <button v-if="canUpload" @click="router.push('/upload')" class="btn btn-success" style="margin-left: 10px; background-color: #2e7d32; color: white;">
+        ➕ Додати книгу
+      </button>
     </div>
 
     <div v-if="loading" class="alert alert-info">⏳ Завантаження...</div>
