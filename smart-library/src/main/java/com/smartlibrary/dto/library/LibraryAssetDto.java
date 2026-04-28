@@ -18,4 +18,5 @@ public class LibraryAssetDto {
     private Object marc21Data;
     private String filePath;
     private LocalDateTime createdAt;
+    private String licenseType;
 }

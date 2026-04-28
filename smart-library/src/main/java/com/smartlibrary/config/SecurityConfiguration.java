@@ -32,21 +32,17 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/library/assets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/library/assets").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/library/assets/{id}").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/library/assets/*/download")
                         .hasAnyRole("READER", "MODERATOR", "ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/library/upload")
-                        .hasAnyRole("MODERATOR", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/library/assets/**")
-                        .hasAnyRole("MODERATOR", "ADMIN")
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/library/assets/**")
-                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/library/upload").hasAnyRole("MODERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/library/assets/**").hasAnyRole("MODERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/library/assets/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

@@ -9,11 +9,9 @@ const book = ref(null)
 const loading = ref(true)
 const error = ref(null)
 
-// Для режиму редагування
 const isEditing = ref(false)
 const editData = ref({ title: '', summary: '', publicationYear: null })
 
-// Перевірка ролі (тільки ADMIN/MODERATOR може редагувати)
 const token = localStorage.getItem('jwt')
 const userRole = ref('GUEST')
 if (token) {
@@ -29,7 +27,6 @@ const fetchBookDetails = async () => {
     })
     if (!response.ok) throw new Error('Книгу не знайдено')
     book.value = await response.json()
-    // Заповнюємо дані для форми редагування
     editData.value = { ...book.value }
   } catch (err) {
     error.value = err.message
@@ -76,6 +73,12 @@ onMounted(fetchBookDetails)
         <div v-else class="edit-fields">
           <input v-model="editData.title" class="edit-input title-edit" placeholder="Назва книги" />
           <input v-model="editData.publicationYear" type="number" class="edit-input" placeholder="Рік видання" />
+          <label>Тип ліцензії:</label>
+          <select v-model="editData.licenseType" class="edit-input">
+            <option value="OPEN_ACCESS">Відкритий доступ</option>
+            <option value="INSTITUTIONAL">Локальна мережа</option>
+            <option value="RESTRICTED">Обмежений доступ</option>
+          </select>
         </div>
 
         <button v-if="canEdit && !isEditing" @click="isEditing = true" class="btn btn-edit">📝 Редагувати</button>
@@ -101,8 +104,12 @@ onMounted(fetchBookDetails)
           <button @click="saveChanges" class="btn btn-save">✅ Зберегти</button>
           <button @click="isEditing = false" class="btn btn-cancel">Скасувати</button>
         </div>
-        <a v-else :href="'http://localhost:8080/api/v1/library/assets/' + book.id + '/download'"
-           class="btn btn-download" target="_blank">📥 Завантажити PDF</a>
+
+        <div v-else>
+          <a v-if="token" :href="'http://localhost:8080/api/v1/library/assets/' + book.id + '/download'"
+             class="btn btn-download" target="_blank">📥 Завантажити PDF</a>
+          <p v-else class="login-prompt">🔒 <router-link to="/login">Увійдіть</router-link>, щоб завантажити файл</p>
+        </div>
       </div>
     </div>
   </div>

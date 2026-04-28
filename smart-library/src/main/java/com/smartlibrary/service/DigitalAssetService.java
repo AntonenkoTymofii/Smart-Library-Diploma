@@ -161,23 +161,22 @@ public class DigitalAssetService {
 
     @Transactional
     public LibraryAssetDto updateAsset(UUID assetId, UpdateAssetDto updateDto) {
-        AssetMetadata metadata = metadataRepository.findAll().stream()
-                .filter(m -> m.getDigitalAsset().getId().equals(assetId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Книгу з ID " + assetId + " не знайдено"));
+        AssetMetadata metadata = metadataRepository.findById(assetId)
+                .orElseThrow(() -> new RuntimeException("Asset not found"));
 
-        if (updateDto.getTitle() != null) metadata.setTitle(updateDto.getTitle());
-        if (updateDto.getAuthors() != null) metadata.setAuthors(updateDto.getAuthors());
-        if (updateDto.getSummary() != null) metadata.setSummary(updateDto.getSummary());
+        metadata.setTitle(updateDto.getTitle());
+        metadata.setSummary(updateDto.getSummary());
+        metadata.setPublicationYear(updateDto.getPublicationYear());
 
-        if (updateDto.getMarc21Data() != null) {
-            try {
-                String jsonMarc21 = new com.fasterxml.jackson.databind.ObjectMapper()
-                        .writeValueAsString(updateDto.getMarc21Data());
-                metadata.setMarc21Data(jsonMarc21);
-            } catch (Exception e) {
-                log.error("Помилка конвертації MARC21 при оновленні: {}", e.getMessage());
-            }
+        if (updateDto.getLicenseType() != null) {
+            metadata.getDigitalAsset().setLicenseType(updateDto.getLicenseType());
+        }
+
+        try {
+            String jsonAuthors = objectMapper.writeValueAsString(updateDto.getAuthors());
+            metadata.setAuthors(jsonAuthors);
+        } catch (Exception e) {
+            log.error("Помилка мапінгу авторів");
         }
 
         metadataRepository.save(metadata);
@@ -227,6 +226,7 @@ public class DigitalAssetService {
                 .marc21Data(parsedMarc21)
                 .filePath(metadata.getDigitalAsset().getFilePath())
                 .createdAt(metadata.getDigitalAsset().getCreatedAt())
+                .licenseType(metadata.getDigitalAsset().getLicenseType().name())
                 .build();
     }
 
