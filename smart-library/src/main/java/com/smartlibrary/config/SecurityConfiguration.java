@@ -33,13 +33,20 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/v1/library/assets/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/library/upload").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/library/assets/*/download")
+                        .hasAnyRole("READER", "MODERATOR", "ADMIN")
 
-                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/library/upload")
+                        .hasAnyRole("MODERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/library/assets/**")
+                        .hasAnyRole("MODERATOR", "ADMIN")
 
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/library/assets/**")
+                        .hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
