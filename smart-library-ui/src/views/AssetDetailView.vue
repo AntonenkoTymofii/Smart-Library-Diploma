@@ -54,6 +54,26 @@ const saveChanges = async () => {
   }
 }
 
+const deleteBook = async () => {
+  if (!confirm('Ви впевнені, що хочете назавжди видалити цю книгу та всі її дані?')) return;
+
+  try {
+    const response = await fetch(`http://localhost:8080/api/v1/library/assets/${book.value.id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) throw new Error('Помилка при видаленні');
+
+    alert('Книгу успішно видалено');
+    router.push('/');
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+const isAdmin = computed(() => userRole.value === 'ADMIN');
+
 onMounted(fetchBookDetails)
 </script>
 
@@ -82,6 +102,7 @@ onMounted(fetchBookDetails)
         </div>
 
         <button v-if="canEdit && !isEditing" @click="isEditing = true" class="btn btn-edit">📝 Редагувати</button>
+        <button v-if="isAdmin" @click="deleteBook" class="btn btn-delete">🗑 Видалити</button>
       </div>
 
       <div class="detail-body">

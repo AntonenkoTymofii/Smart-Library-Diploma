@@ -188,16 +188,21 @@ public class DigitalAssetService {
         DigitalAsset asset = assetRepository.findById(assetId)
                 .orElseThrow(() -> new RuntimeException("Книгу з ID " + assetId + " не знайдено"));
 
+        metadataRepository.deleteById(assetId);
+        log.info("Метадані для книги {} видалено", assetId);
+
         try {
             Path filePath = Path.of(asset.getFilePath());
-            Files.deleteIfExists(filePath);
-            log.info("Файл успішно видалено з диска: {}", filePath);
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                log.info("Файл успішно видалено з диска: {}", filePath);
+            }
         } catch (Exception e) {
-            log.error("Не вдалося видалити файл з диска: {}", e.getMessage());
+            log.error("Не вдалося видалити фізичний файл: {}", e.getMessage());
         }
 
         assetRepository.delete(asset);
-        log.info("Книгу {} повністю видалено з бази даних", assetId);
+        log.info("Книгу {} успішно видалено з бази даних", assetId);
     }
 
     private LibraryAssetDto convertToDto(AssetMetadata metadata) {
