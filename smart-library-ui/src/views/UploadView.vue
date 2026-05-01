@@ -56,67 +56,48 @@ const uploadFile = async () => {
 </script>
 
 <template>
-  <div class="upload-container">
-    <button @click="router.back()" class="btn-back">⬅ Назад до каталогу</button>
+  <div class="p-6 md:p-10 max-w-3xl mx-auto w-full">
+    <button @click="router.back()" class="flex items-center text-slate-500 hover:text-rose-700 font-medium mb-6 transition-colors">
+      <i class="fas fa-arrow-left mr-2"></i> Назад до каталогу
+    </button>
 
-    <div class="upload-card">
-      <h2>Завантажити новий документ</h2>
-      <p class="subtitle">ШІ автоматично проаналізує файл та створить анотацію.</p>
+    <div class="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-slate-200">
+      <h2 class="text-3xl font-bold text-slate-900 mb-2">Завантажити новий документ</h2>
+      <p class="text-slate-500 mb-8">ШІ автоматично проаналізує файл, створить вектор та анотацію.</p>
 
-      <div v-if="error" class="alert alert-error">{{ error }}</div>
+      <div v-if="error" class="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 mb-6">{{ error }}</div>
 
-      <div class="form-group">
-        <label>PDF Файл <span class="required">*</span></label>
-        <div class="file-drop-area">
-          <input type="file" @change="handleFileChange" accept=".pdf" id="file-upload" class="file-input-hidden"/>
-          <label for="file-upload" class="file-label">
-            <span class="file-icon"></span>
-            <span class="file-name">{{ selectedFile ? selectedFile.name : 'Натисніть, щоб обрати PDF файл' }}</span>
-          </label>
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">PDF Файл <span class="text-rose-600">*</span></label>
+          <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50 hover:bg-rose-50 hover:border-rose-300 transition-colors">
+            <input type="file" @change="handleFileChange" accept=".pdf" id="file-upload" class="hidden"/>
+            <label for="file-upload" class="cursor-pointer flex flex-col items-center gap-3">
+              <i class="fas fa-file-pdf text-4xl text-slate-400"></i>
+              <span class="text-rose-700 font-semibold">{{ selectedFile ? selectedFile.name : 'Натисніть, щоб обрати PDF файл' }}</span>
+            </label>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Назва роботи <span class="required">*</span></label>
-        <input v-model="title" type="text" class="form-input" placeholder="Введіть назву..." />
-      </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Назва роботи <span class="text-rose-600">*</span></label>
+          <input v-model="title" type="text" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-600 outline-none text-slate-900" placeholder="Введіть назву..." />
+        </div>
 
-      <div class="form-group">
-        <label>Тип ліцензії</label>
-        <select v-model="licenseType" class="form-input">
-          <option value="OPEN_ACCESS">Відкритий доступ (Open Access)</option>
-          <option value="INSTITUTIONAL">Локальна мережа (Інституційний)</option>
-          <option value="RESTRICTED">Суворо обмежений доступ</option>
-        </select>
-      </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Тип ліцензії</label>
+          <select v-model="licenseType" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-600 outline-none text-slate-900">
+            <option value="OPEN_ACCESS">Відкритий доступ (Open Access)</option>
+            <option value="INSTITUTIONAL">Локальна мережа (Інституційний)</option>
+            <option value="RESTRICTED">Суворо обмежений доступ</option>
+          </select>
+        </div>
 
-      <button @click="uploadFile" :disabled="uploading || !selectedFile || !title" class="btn btn-primary btn-submit">
-        {{ uploading ? 'ШІ аналізує файл...' : 'Завантажити в бібліотеку' }}
-      </button>
+        <button @click="uploadFile" :disabled="uploading || !selectedFile || !title" class="w-full bg-slate-900 text-white rounded-xl py-4 font-semibold hover:bg-slate-800 transition-colors shadow-md disabled:bg-slate-400 mt-4 flex justify-center items-center">
+          <i v-if="uploading" class="fas fa-spinner fa-spin mr-2"></i>
+          {{ uploading ? 'ШІ аналізує файл...' : 'Завантажити в бібліотеку' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.upload-container { max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-.btn-back { background: none; border: none; color: #2a5298; cursor: pointer; font-weight: 600; margin-bottom: 1rem; padding: 0; }
-.upload-card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-.upload-card h2 { margin-top: 0; color: #2c3e50; }
-.subtitle { color: #666; margin-bottom: 2rem; }
-.form-group { margin-bottom: 1.5rem; }
-.form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333; }
-.required { color: #e53935; }
-.form-input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; box-sizing: border-box; }
-.form-input:focus { border-color: #2a5298; outline: none; }
-
-.file-drop-area { border: 2px dashed #bbdefb; border-radius: 8px; padding: 2rem; text-align: center; background-color: #f8fbff; transition: all 0.3s; }
-.file-drop-area:hover { border-color: #2a5298; background-color: #f1f7ff; }
-.file-input-hidden { display: none; }
-.file-label { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.file-icon { font-size: 3rem; }
-.file-name { color: #1976d2; font-weight: 500; }
-
-.btn-submit { width: 100%; padding: 14px; font-size: 1.1rem; margin-top: 1rem; }
-.btn-submit:disabled { background-color: #a0b4d4; cursor: not-allowed; }
-.alert-error { padding: 1rem; background-color: #fde8e8; color: #c62828; border-radius: 8px; margin-bottom: 1.5rem; }
-</style>

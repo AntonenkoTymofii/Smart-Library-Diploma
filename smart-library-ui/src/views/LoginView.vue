@@ -26,7 +26,6 @@ const authenticate = async () => {
     if (!response.ok) throw new Error('Невірний email або пароль (або користувач вже існує)')
 
     const data = await response.json()
-
     localStorage.setItem('jwt', data.token)
     router.push('/')
 
@@ -39,59 +38,34 @@ const authenticate = async () => {
 </script>
 
 <template>
-  <div class="auth-container">
-    <div class="auth-card">
-      <h2>{{ isLoginMode ? 'Вхід у систему' : 'Реєстрація' }}</h2>
+  <div class="flex items-center justify-center min-h-[calc(100vh-80px)] w-full px-4">
+    <div class="bg-white p-10 rounded-2xl shadow-lg border border-slate-200 w-full max-w-md flex flex-col gap-6">
 
-      <div v-if="authError" class="alert alert-error">{{ authError }}</div>
+      <div class="text-center mb-2">
+        <div class="w-16 h-16 bg-rose-700 rounded-2xl shadow-lg shadow-rose-200 mx-auto flex items-center justify-center text-white font-bold text-3xl mb-4">
+          <i class="fas fa-layer-group"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">{{ isLoginMode ? 'Вхід у систему' : 'Реєстрація' }}</h2>
+      </div>
 
-      <input v-model="authData.email" type="email" placeholder="Email" class="search-input" />
-      <input v-model="authData.password" type="password" placeholder="Пароль" class="search-input" />
+      <div v-if="authError" class="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 text-sm text-center">
+        {{ authError }}
+      </div>
 
-      <button @click="authenticate" class="btn btn-primary" :disabled="loading">
+      <div class="space-y-4">
+        <input v-model="authData.email" type="email" placeholder="Електронна пошта" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-600 outline-none text-slate-900 placeholder-slate-400" />
+        <input v-model="authData.password" type="password" placeholder="Пароль" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-600 outline-none text-slate-900 placeholder-slate-400" />
+      </div>
+
+      <button @click="authenticate" :disabled="loading" class="w-full bg-slate-900 text-white rounded-xl py-3 font-semibold hover:bg-slate-800 transition-colors shadow-md disabled:bg-slate-400 mt-2">
         {{ loading ? 'Зачекайте...' : (isLoginMode ? 'Увійти' : 'Зареєструватися') }}
       </button>
 
-      <p class="toggle-mode">
-        <a href="#" @click.prevent="isLoginMode = !isLoginMode">
+      <p class="text-center text-sm text-slate-500 mt-4">
+        <a href="#" @click.prevent="isLoginMode = !isLoginMode" class="text-rose-700 font-semibold hover:underline">
           {{ isLoginMode ? 'Немає акаунту? Зареєструйтесь' : 'Вже є акаунт? Увійти' }}
         </a>
       </p>
     </div>
   </div>
 </template>
-
-<style scoped>
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: calc(100vh - 80px);
-}
-.auth-card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-.auth-card h2 { text-align: center; margin-top: 0; color: #2c3e50; }
-.search-input {
-  width: 100%;
-  padding: 12px 15px;
-  font-size: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-.btn { padding: 12px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600; }
-.btn-primary { background-color: #2a5298; color: white; }
-.btn-primary:disabled { background-color: #a0b4d4; cursor: not-allowed; }
-.alert-error { background-color: #fde8e8; color: #c62828; padding: 10px; border-radius: 6px; text-align: center; }
-.toggle-mode { text-align: center; margin: 0; }
-.toggle-mode a { color: #2a5298; text-decoration: none; font-weight: 500; }
-</style>
