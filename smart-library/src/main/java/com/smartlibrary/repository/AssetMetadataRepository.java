@@ -17,9 +17,11 @@ public interface AssetMetadataRepository extends JpaRepository<AssetMetadata, UU
     List<AssetMetadata> findAllWithDigitalAsset();
     @Query(value = "SELECT * FROM asset_metadata " +
             "WHERE embedding IS NOT NULL " +
-            "ORDER BY embedding <-> cast(:queryVectorString as vector) " +
+            "AND (1 - (embedding <=> cast(:queryVectorString as vector))) > 0.7  " +
+            "ORDER BY embedding <=> cast(:queryVectorString as vector) " +
             "LIMIT 5", nativeQuery = true)
     List<AssetMetadata> searchSimilarDocuments(@Param("queryVectorString") String queryVectorString);
 
     @Query("SELECT a FROM AssetMetadata a WHERE LOWER(a.title) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(CAST(a.authors AS string)) LIKE LOWER(CONCAT('%', :filter, '%'))")
-    Page<AssetMetadata> searchByKeyword(@Param("filter") String filter, Pageable pageable);}
+    Page<AssetMetadata> searchByKeyword(@Param("filter") String filter, Pageable pageable);
+}

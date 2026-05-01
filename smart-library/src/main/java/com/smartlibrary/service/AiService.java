@@ -80,4 +80,29 @@ public class AiService {
             return null;
         }
     }
+
+    public String chatWithDocument(String documentText, String userQuery) {
+        log.info("Генеруємо відповідь RAG-чату...");
+
+        String safeText = documentText.length() > 2000 ? documentText.substring(0, 2000) : documentText;
+
+        String prompt = String.format("""
+                Ти професійний AI-асистент бібліотеки. 
+                Твоє завдання — дати розгорнуту та точну відповідь на запитання користувача, використовуючи ВИКЛЮЧНО наведений нижче текст документа.
+                Якщо в тексті немає інформації для відповіді, чесно скажи: "На жаль, у тексті цієї книги я не знайшов інформації для відповіді на ваше запитання."
+                Відповідай мовою запитання (українською).
+                
+                Запитання: %s
+                
+                Текст документа для аналізу:
+                %s
+                """, userQuery, safeText);
+
+        try {
+            return chatModel.call(prompt);
+        } catch (Exception e) {
+            log.error("Помилка генерації відповіді чату: {}", e.getMessage());
+            return "Вибачте, сталася помилка сервера під час обробки вашого запиту.";
+        }
+    }
 }

@@ -97,4 +97,18 @@ public class LibraryController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
                 .body(resource);
     }
+
+    @GetMapping("/assets/{id}/chat")
+    public ResponseEntity<String> chatWithAsset(
+            @PathVariable UUID id,
+            @RequestParam("query") String query) {
+
+        String answer = digitalAssetService.chatWithBook(id, query);
+        return ResponseEntity.ok(answer);
+    }
+
+    @GetMapping("/assets/stats")
+    public ResponseEntity<java.util.Map<String, Long>> getLibraryStats() {
+        return ResponseEntity.ok(digitalAssetService.getLibraryStats());
+    }
 }

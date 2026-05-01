@@ -238,14 +238,24 @@ public class DigitalAssetService {
     public List<LibraryAssetDto> searchBooks(String query) {
         log.info("Шукаємо книги за запитом: '{}'", query);
 
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+
         List<Double> queryEmbeddingList = aiService.generateEmbedding(query);
-        if (queryEmbeddingList == null || queryEmbeddingList.size() != 768) {
-            throw new RuntimeException("Не вдалося згенерувати вектор для пошукового запиту");
+
+        if (queryEmbeddingList == null || queryEmbeddingList.isEmpty()) {
+            log.error("Не вдалося згенерувати вектор для пошукового запиту. Ollama не відповідає.");
+            return List.of();
         }
 
         String vectorString = queryEmbeddingList.toString();
 
         List<AssetMetadata> searchResults = metadataRepository.searchSimilarDocuments(vectorString);
+
+        if (searchResults.isEmpty()) {
+            log.info("Не знайдено жодної книги, яка б за змістом (Cosine Similarity > 0.5) відповідала запиту.");
+        }
 
         return searchResults.stream().map(this::convertToDto).toList();
     }
@@ -266,5 +276,33 @@ public class DigitalAssetService {
         } catch (MalformedURLException ex) {
             throw new RuntimeException("Помилка при формуванні шляху до файлу", ex);
         }
+    }
+
+    public String chatWithBook(UUID assetId, String query) {
+        AssetMetadata metadata = metadataRepository.findById(assetId)
+                .orElseThrow(() -> new RuntimeException("Книгу не знайдено"));
+
+        String documentText;
+        try {
+            documentText = pdfParserService.extractTextForSummary(metadata.getDigitalAsset().getFilePath(), 15);
+        } catch (Exception e) {
+            log.error("Не вдалося прочитати текст з PDF для чату: {}", e.getMessage());
+            documentText = metadata.getSummary() != null ? metadata.getSummary() : metadata.getTitle();
+        }
+
+        return aiService.chatWithDocument(documentText, query);
+    }
+
+    public java.util.Map<String, Long> getLibraryStats() {
+        long total = assetRepository.count();
+        long protectedAssets = assetRepository.findAll().stream()
+                .filter(a -> a.getLicenseType() != LicenseType.OPEN_ACCESS)
+                .count();
+
+        return java.util.Map.of(
+                "total", total,
+                "aiProcessed", total,
+                "protected", protectedAssets
+        );
     }
 }
