@@ -26,7 +26,7 @@ onMounted(fetchStats)
   <div class="p-6 md:p-10 max-w-6xl mx-auto w-full">
     <div class="flex justify-between items-end mb-8">
       <div>
-        <h2 class="text-3xl font-bold text-slate-900">Вітаємо у Smart Library! 👋</h2>
+        <h2 class="text-3xl font-bold text-slate-900">Вітаємо у Smart Library!</h2>
         <p class="text-slate-500 mt-1">Інтелектуальний репозитарій з автоматичною генерацією метаданих.</p>
       </div>
     </div>
