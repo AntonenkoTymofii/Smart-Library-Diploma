@@ -125,12 +125,12 @@ const downloadPdf = async (assetId, title) => {
       <button @click="searchBooks" class="btn btn-primary">Знайти</button>
 
       <button v-if="canUpload" @click="router.push('/upload')" class="btn btn-success" style="margin-left: 10px; background-color: #2e7d32; color: white;">
-        ➕ Додати книгу
+        Додати книгу
       </button>
     </div>
 
-    <div v-if="loading" class="alert alert-info">⏳ Завантаження...</div>
-    <div v-else-if="error" class="alert alert-error">❌ {{ error }}</div>
+    <div v-if="loading" class="alert alert-info">Завантаження...</div>
+    <div v-else-if="error" class="alert alert-error">{{ error }}</div>
     <div v-else class="book-grid">
       <div v-for="book in books" :key="book.id" class="book-card">
         <div class="card-header">
@@ -139,19 +139,19 @@ const downloadPdf = async (assetId, title) => {
           </router-link>
         </div>
         <div class="card-body">
-          <p class="author">👨‍💻 <strong>Автор:</strong> {{ book.authors.join(', ') }}</p>
+          <p class="author"><strong>Автор:</strong> {{ book.authors.join(', ') }}</p>
           <p class="summary">{{ book.summary }}</p>
         </div>
         <div class="card-footer">
-          <span v-if="book.publicationYear" class="year-badge">📅 {{ book.publicationYear }} рік</span>
+          <span v-if="book.publicationYear" class="year-badge">{{ book.publicationYear }} рік</span>
           <button
               v-if="!isGuest"
               @click="downloadPdf(book.id, book.title)"
               class="btn btn-download"
           >
-            📥 Скачати
+            Скачати
           </button>
-          <p v-else style="font-size: 0.8rem; color: #999;">🔒 Увійдіть, щоб скачати</p>
+          <p v-else style="font-size: 0.8rem; color: #999;">Увійдіть, щоб скачати</p>
         </div>
       </div>
     </div>

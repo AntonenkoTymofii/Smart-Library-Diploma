@@ -60,7 +60,7 @@ const uploadFile = async () => {
     <button @click="router.back()" class="btn-back">⬅ Назад до каталогу</button>
 
     <div class="upload-card">
-      <h2>📤 Завантажити новий документ</h2>
+      <h2>Завантажити новий документ</h2>
       <p class="subtitle">ШІ автоматично проаналізує файл та створить анотацію.</p>
 
       <div v-if="error" class="alert alert-error">{{ error }}</div>
@@ -70,7 +70,7 @@ const uploadFile = async () => {
         <div class="file-drop-area">
           <input type="file" @change="handleFileChange" accept=".pdf" id="file-upload" class="file-input-hidden"/>
           <label for="file-upload" class="file-label">
-            <span class="file-icon">📄</span>
+            <span class="file-icon"></span>
             <span class="file-name">{{ selectedFile ? selectedFile.name : 'Натисніть, щоб обрати PDF файл' }}</span>
           </label>
         </div>
@@ -91,7 +91,7 @@ const uploadFile = async () => {
       </div>
 
       <button @click="uploadFile" :disabled="uploading || !selectedFile || !title" class="btn btn-primary btn-submit">
-        {{ uploading ? '⏳ ШІ аналізує файл...' : 'Завантажити в бібліотеку' }}
+        {{ uploading ? 'ШІ аналізує файл...' : 'Завантажити в бібліотеку' }}
       </button>
     </div>
   </div>

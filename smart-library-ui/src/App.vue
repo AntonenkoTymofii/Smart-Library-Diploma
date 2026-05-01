@@ -22,7 +22,7 @@ const logout = () => {
     <header class="header">
       <div class="nav-content">
         <div class="logo" @click="router.push('/')" style="cursor: pointer;">
-          <h1>📚 Smart Library</h1>
+          <h1>Smart Library</h1>
           <p>Інтелектуальна система</p>
         </div>
 

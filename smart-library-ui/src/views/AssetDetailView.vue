@@ -81,14 +81,14 @@ onMounted(fetchBookDetails)
   <div class="detail-container">
     <button @click="router.back()" class="btn-back">⬅ Назад до каталогу</button>
 
-    <div v-if="loading" class="loader">⏳ Завантаження інформації...</div>
-    <div v-else-if="error" class="error-box">❌ {{ error }}</div>
+    <div v-if="loading" class="loader">Завантаження інформації...</div>
+    <div v-else-if="error" class="error-box">{{ error }}</div>
 
     <div v-else-if="book" class="book-detail-card">
       <div class="detail-header">
         <div v-if="!isEditing">
           <h1>{{ book.title }}</h1>
-          <p class="author-tag">👨‍💻 {{ book.authors.join(', ') }}</p>
+          <p class="author-tag">{{ book.authors.join(', ') }}</p>
         </div>
         <div v-else class="edit-fields">
           <input v-model="editData.title" class="edit-input title-edit" placeholder="Назва книги" />
@@ -101,35 +101,35 @@ onMounted(fetchBookDetails)
           </select>
         </div>
 
-        <button v-if="canEdit && !isEditing" @click="isEditing = true" class="btn btn-edit">📝 Редагувати</button>
-        <button v-if="isAdmin" @click="deleteBook" class="btn btn-delete">🗑 Видалити</button>
+        <button v-if="canEdit && !isEditing" @click="isEditing = true" class="btn btn-edit">Редагувати</button>
+        <button v-if="isAdmin" @click="deleteBook" class="btn btn-delete">Видалити</button>
       </div>
 
       <div class="detail-body">
-        <h3>📄 Анотація від ШІ</h3>
+        <h3>Анотація від ШІ</h3>
         <p v-if="!isEditing" class="summary-text">{{ book.summary }}</p>
         <textarea v-else v-model="editData.summary" rows="8" class="edit-input textarea-edit"></textarea>
 
         <div class="meta-grid">
           <div class="meta-item">
-            <strong>📅 Рік:</strong> {{ book.publicationYear || 'Не вказано' }}
+            <strong>Рік:</strong> {{ book.publicationYear || 'Не вказано' }}
           </div>
           <div class="meta-item">
-            <strong>⚖️ Ліцензія:</strong> {{ book.licenseType }}
+            <strong>Ліцензія:</strong> {{ book.licenseType }}
           </div>
         </div>
       </div>
 
       <div class="detail-footer">
         <div v-if="isEditing" class="edit-actions">
-          <button @click="saveChanges" class="btn btn-save">✅ Зберегти</button>
+          <button @click="saveChanges" class="btn btn-save">Зберегти</button>
           <button @click="isEditing = false" class="btn btn-cancel">Скасувати</button>
         </div>
 
         <div v-else>
           <a v-if="token" :href="'http://localhost:8080/api/v1/library/assets/' + book.id + '/download'"
-             class="btn btn-download" target="_blank">📥 Завантажити PDF</a>
-          <p v-else class="login-prompt">🔒 <router-link to="/login">Увійдіть</router-link>, щоб завантажити файл</p>
+             class="btn btn-download" target="_blank">Завантажити PDF</a>
+          <p v-else class="login-prompt"><router-link to="/login">Увійдіть</router-link>, щоб завантажити файл</p>
         </div>
       </div>
     </div>

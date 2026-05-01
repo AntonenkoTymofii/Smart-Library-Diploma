@@ -49,7 +49,7 @@ const authenticate = async () => {
       <input v-model="authData.password" type="password" placeholder="Пароль" class="search-input" />
 
       <button @click="authenticate" class="btn btn-primary" :disabled="loading">
-        {{ loading ? '⏳ Зачекайте...' : (isLoginMode ? 'Увійти' : 'Зареєструватися') }}
+        {{ loading ? 'Зачекайте...' : (isLoginMode ? 'Увійти' : 'Зареєструватися') }}
       </button>
 
       <p class="toggle-mode">
